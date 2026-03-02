@@ -1,7 +1,5 @@
 import {Router} from "express"
 import { protect } from "../../middlewares/auth.middleware.js";
-import { allowRoles } from "../../middlewares/role.middleware.js";
-import { ROLES } from "../../constants/roles.js";
 import { 
     changePassword,
     confirmEmailToken,

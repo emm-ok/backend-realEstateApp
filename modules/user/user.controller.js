@@ -14,9 +14,8 @@ export const getCurrentUser = async (req, res) => {
     const userId = req.user._id;
 
     // Fetch user from DB to ensure up-to-date data
-    const user = await User.findById(userId)
-      .select(
-        "name email phone location bio image role bookmarks isActive emailVerified createdAt",
+    const user = await User.findById(userId).select(
+        "name email phone company location bio image role bookmarks isActive emailVerified createdAt",
       )
       .populate("bookmarks", "title price location");
 

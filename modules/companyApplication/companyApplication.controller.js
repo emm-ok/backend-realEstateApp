@@ -4,6 +4,9 @@ import User from "../user/user.model.js";
 import CompanyApplication from "./companyApplication.model.js";
 import crypto from "crypto";
 import { logAdminAction } from "../../utils/logAdminAction.js";
+import CompanyMember, {
+  COMPANY_MEMBER_ROLES,
+} from "../companyMember/companyMember.model.js";
 
 /* Create a new company application */
 export const createCompanyApplication = async (req, res) => {
@@ -12,7 +15,6 @@ export const createCompanyApplication = async (req, res) => {
 
     const existing = await CompanyApplication.findOne({
       userId,
-      status: { $in: ["draft", "pending"] },
     });
 
     if (existing) {
@@ -63,7 +65,6 @@ export const getMyCompanyApplication = async (req, res) => {
 
     const application = await CompanyApplication.findOne({
       userId,
-      status: { $in: ["draft", "submitted", "under_review"] },
     }).lean();
 
     if (!application) {
@@ -94,7 +95,7 @@ export const updateCompanyApplicationDraft = async (req, res) => {
 
     const application = await CompanyApplication.findOne({
       userId,
-      status: "draft",
+      status: { $in: ["draft", "rejected"] },
     });
 
     if (!application) {
@@ -167,7 +168,7 @@ export const submitCompanyApplication = async (req, res) => {
 
     const application = await CompanyApplication.findOne({
       userId,
-      status: "draft",
+      status: { $in: ["draft", "rejected"] },
     });
 
     if (!application) {
@@ -231,7 +232,7 @@ export const uploadCompanyDocument = async (req, res) => {
 
     const application = await CompanyApplication.findOne({
       userId,
-      status: "draft",
+      status: { $in: ["draft", "rejected"] },
     });
 
     if (!application)
@@ -348,23 +349,28 @@ export const getCompanyApplicationById = async (req, res) => {
 /* Approve a company application */
 export const approveCompanyApplication = async (req, res) => {
   try {
-    const applicationId = req.params.applicationId;
+    const { applicationId } = req.params;
     const adminId = req.admin._id;
 
-    const application = await CompanyApplication.findById(applicationId);
+    const application = await CompanyApplication.findOne({
+      _id: applicationId,
+      status: "pending",
+    });
 
     if (!application) {
       return res
         .status(404)
-        .json({ success: false, message: "Application not found" });
+        .json({ success: false, message: "Pending Application not found" });
     }
 
     if (
-      application.status !== "pending"
+      !application.userId ||
+      !application.company?.name ||
+      !application.company?.email
     ) {
       return res.status(400).json({
         success: false,
-        message: "Only submitted or under_review applications can be approved",
+        message: "Application data is incomplete",
       });
     }
 
@@ -380,19 +386,25 @@ export const approveCompanyApplication = async (req, res) => {
       agents: [],
       users: [],
     });
+    
+    const member = await CompanyMember.create({
+      user: application.userId,
+      company: newCompany._id,
+      role: COMPANY_MEMBER_ROLES.ADMIN,
+    });
+
+    newCompany.users.push(member._id);
+    newCompany.verified = true;
+    await newCompany.save();
 
     // 2️⃣ Update application status
     application.status = "approved";
     application.approvedAt = new Date();
 
-    const user = await User.findById(application.userId, {
-      role: ROLES.COMPANY_ADMIN,
-    });
 
-    const company = await Company.findById(newCompany._id);
-    company.users.push(user._id);
-    company.verified = true;
-    await company.save();
+    const user = await User.findById(application.userId);
+    user.company = newCompany._id;
+    await user.save();
 
     application.history.push({
       action: "approved",
@@ -402,11 +414,9 @@ export const approveCompanyApplication = async (req, res) => {
     });
     await application.save();
 
-    const admin = await User.findById(adminId);
-
     await logAdminAction({
       req,
-      targetCompany: application.company,
+      targetCompany: newCompany._id,
       action: "APPROVE_COMPANY_APPLICATION",
       notes: "Company application approved",
     });
@@ -431,7 +441,9 @@ export const rejectCompanyApplication = async (req, res) => {
     const adminId = req.user._id;
     const { reason } = req.body;
 
-    const application = await CompanyApplication.findById(applicationId);
+    const application = await CompanyApplication.findById(applicationId, {
+      status: "pending",
+    });
 
     if (!application) {
       return res
@@ -439,12 +451,10 @@ export const rejectCompanyApplication = async (req, res) => {
         .json({ success: false, message: "Application not found" });
     }
 
-    if (
-      application.status !== "pending" 
-    ) {
+    if (application.status !== "pending") {
       return res.status(400).json({
         success: false,
-        message: "Only submitted or under_review applications can be rejected",
+        message: "Only submitted applications can be rejected",
       });
     }
 

@@ -11,7 +11,6 @@ export const createAgentApplication = async (req, res) => {
 
     const existing = await AgentApplication.findOne({
       userId,
-      status: { $in: "draft" },
     });
 
     if (existing) {
@@ -48,7 +47,7 @@ export const createAgentApplication = async (req, res) => {
       application,
     });
   } catch (error) {
-    console.error(error)
+    console.error(error);
     return res.status(500).json({
       success: false,
       message: "Failed to create agent application",
@@ -108,7 +107,7 @@ export const updateAgentApplicationDraft = async (req, res) => {
 
     const application = await AgentApplication.findOne({
       userId,
-      status: { $in: ["draft", "rejected"]},
+      status: { $in: ["draft", "rejected"] },
     });
 
     if (!application) {
@@ -183,7 +182,7 @@ export const uploadAgentDocument = async (req, res) => {
 
     const application = await AgentApplication.findOne({
       userId,
-      status: "draft",
+      status: { $in: ["draft", "rejected"] },
     });
 
     if (!application) {
@@ -225,7 +224,7 @@ export const deleteAgentDocument = async (req, res) => {
 
     const application = await AgentApplication.findOne({
       userId,
-      status: "draft",
+      status: { $in: ["draft", "rejected"] },
     });
 
     if (!application) {
@@ -259,7 +258,7 @@ export const submitAgentApplication = async (req, res) => {
 
     const application = await AgentApplication.findOne({
       userId,
-      status: { $in: ["draft", "rejected"]},
+      status: { $in: ["draft", "rejected"] },
     });
 
     if (!application) {
@@ -455,7 +454,10 @@ export const approveAgentApplication = async (req, res) => {
     const admin = await User.findById(req.admin._id);
     if (!admin) return res.status(401).json({ success: false });
 
-    const application = await AgentApplication.findById(applicationId);
+    const application = await AgentApplication.findOne({
+      _id: applicationId,
+      status: "pending",
+    });
     if (!application) {
       return res.status(404).json({ success: false });
     }
@@ -521,11 +523,20 @@ export const rejectAgentApplication = async (req, res) => {
     const admin = await User.findById(req.admin._id);
     if (!admin) return res.status(401).json({ success: false });
 
-    const application = await AgentApplication.findById(applicationId);
+    const application = await AgentApplication.findById(applicationId, {
+      status: "pending",
+    });
     if (!application) {
       return res.status(404).json({
         success: false,
         message: "Application not found",
+      });
+    }
+
+    if (application.status !== "pending") {
+      return res.status(400).json({
+        success: false,
+        message: "Only submitted applications can be rejected",
       });
     }
 

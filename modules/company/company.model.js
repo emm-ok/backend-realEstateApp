@@ -2,6 +2,11 @@ import mongoose from "mongoose";
 
 const CompanySchema = new mongoose.Schema(
   {
+    userId: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "User",
+      required: true,
+    },
     name: {
       type: String,
       required: true,
@@ -54,14 +59,14 @@ const CompanySchema = new mongoose.Schema(
     deletedBy: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "User",
-    }
+    },
   },
   { timestamps: true },
 );
 
-CompanySchema.pre(/^find/, async function() {
+CompanySchema.pre(/^find/, async function () {
   this.where({ isDeleted: false });
-})
+});
 
 const Company = mongoose.model("Company", CompanySchema);
 export default Company;

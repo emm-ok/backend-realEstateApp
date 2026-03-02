@@ -184,7 +184,7 @@ export const logout = async (req, res, next) => {
 export const fetchMe = async(req, res) => {
     try{
         const user = await User.findById(req.user.id)
-        .select("_id name email role image provider")
+        .select("_id name email role image provider company")
 
         res.status(200).json({ user });
     } catch(error){
