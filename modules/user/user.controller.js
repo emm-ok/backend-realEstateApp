@@ -14,7 +14,8 @@ export const getCurrentUser = async (req, res) => {
     const userId = req.user._id;
 
     // Fetch user from DB to ensure up-to-date data
-    const user = await User.findById(userId).select(
+    const user = await User.findById(userId)
+      .select(
         "name email phone company location bio image role bookmarks isActive emailVerified createdAt",
       )
       .populate("bookmarks", "title price location");
@@ -161,7 +162,23 @@ export const changePassword = async (req, res) => {
       });
     }
 
+    if (user.provider !== "local") {
+      return res.status(400).json({
+        success: false,
+        message: "Password change not available for social login account",
+      });
+    }
+
+    if (!user.password) {
+      return res.status(400).json({
+        success: false,
+        message: "User does not have a password set",
+      });
+    }
+
     const isMatch = await bcrypt.compare(currentPassword, user.password);
+    console.log(currentPassword);
+    console.log(user.password);
 
     if (!isMatch) {
       return res.status(401).json({
@@ -191,6 +208,7 @@ export const changePassword = async (req, res) => {
       message: "Password updated successfully, Please login again",
     });
   } catch (error) {
+    console.log(error);
     return res.status(500).json({
       success: false,
       message: "Failed to update Password",
