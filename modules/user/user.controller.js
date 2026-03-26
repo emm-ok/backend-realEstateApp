@@ -14,7 +14,10 @@ export const getCurrentUser = async (req, res) => {
     const userId = req.user._id;
 
     // Fetch user from DB to ensure up-to-date data
-    const user = await User.findById(userId)
+    const user = await User.findById(userId, {
+      isActive: true,
+      isSuspended: false, 
+    })
       .select(
         "name email phone company location bio image role bookmarks isActive emailVerified createdAt",
       )
@@ -600,6 +603,13 @@ export const suspendUserById = async (req, res) => {
       });
     }
 
+    if(user.role === "admin"){
+      return res.status(400).json({
+        success: false,
+        message: "Cannot suspend user with admin role"
+      })
+    }
+
     user.isSuspended = suspend;
     await user.save();
 
@@ -612,8 +622,7 @@ export const suspendUserById = async (req, res) => {
 
     return res.status(200).json({
       success: true,
-      message: `${suspend ? "Suspended" : "Reactivated"} user ${user._id}`,
-      user,
+      message: `${suspend ? "Suspended" : "Reactivated"} user ${user.name}`,
     });
   } catch (error) {
     console.error("suspendUserById error:", error);

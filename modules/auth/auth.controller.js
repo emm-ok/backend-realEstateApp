@@ -85,12 +85,19 @@ export const login = async (req, res, next) => {
     }
     const { email, password } = parsed.data;
 
-    const user = await User.findOne({ email, isActive: true }).select("+password");
+    const user = await User.findOne({ email, isActive: true, isSuspended: false }).select("+password");
 
     if (!user) {
       const error = new Error("User not found");
       error.statusCode = 401;
       throw error;
+    }
+
+    if(user.isSuspended){
+      return res.status(400).json({
+        success: false,
+        message: "Account is currently suspended!"
+      })
     }
 
     if (user && user.provider !== "local") {
@@ -183,7 +190,10 @@ export const logout = async (req, res, next) => {
 // ------------------- FETCH CURRENT USER -------------------
 export const fetchMe = async(req, res) => {
     try{
-        const user = await User.findById(req.user.id)
+        const user = await User.findById(req.user.id, {
+      isActive: true,
+      isSuspended: false, 
+    })
         .select("_id name email role image provider company")
 
         res.status(200).json({ user });
