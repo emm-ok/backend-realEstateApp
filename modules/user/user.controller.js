@@ -7,6 +7,7 @@ import { sendEmail } from "../../utils/sendEmail.js";
 import { changePasswordSchema } from "./changepassword.schema.js";
 import { logAdminAction } from "../../utils/logAdminAction.js";
 import crypto from "crypto";
+import { ALL_ROLES } from "../../constants/roles.js";
 
 // User
 export const getCurrentUser = async (req, res) => {
@@ -16,7 +17,7 @@ export const getCurrentUser = async (req, res) => {
     // Fetch user from DB to ensure up-to-date data
     const user = await User.findById(userId, {
       isActive: true,
-      isSuspended: false, 
+      isSuspended: false,
     })
       .select(
         "name email phone company location bio image role bookmarks isActive emailVerified createdAt",
@@ -538,7 +539,6 @@ export const getUserById = async (req, res) => {
 };
 export const updateUserById = async (req, res) => {
   try {
-    const admin = req.admin;
     const userId = req.params.id;
 
     const forbiddenFields = ["password", "role", "isAdmin"];
@@ -590,7 +590,6 @@ export const updateUserById = async (req, res) => {
 };
 export const suspendUserById = async (req, res) => {
   try {
-    const admin = req.admin;
     const userId = req.params.id;
     const { suspend } = req.body;
 
@@ -603,11 +602,11 @@ export const suspendUserById = async (req, res) => {
       });
     }
 
-    if(user.role === "admin"){
+    if (user.role === "admin") {
       return res.status(400).json({
         success: false,
-        message: "Cannot suspend user with admin role"
-      })
+        message: "Cannot suspend user with admin role",
+      });
     }
 
     user.isSuspended = suspend;
@@ -617,7 +616,7 @@ export const suspendUserById = async (req, res) => {
       req,
       targetUser: userId,
       action: "SUSPEND_USER",
-      notes: "User suspended",
+      notes: `User ${suspend ? "suspended" : "reactivated"}`,
     });
 
     return res.status(200).json({
@@ -629,6 +628,64 @@ export const suspendUserById = async (req, res) => {
     return res.status(500).json({
       success: false,
       message: "Failed to suspend/reactivate user",
+    });
+  }
+};
+
+export const updateUserRole = async (req, res) => {
+  try {
+    const userId = req.params.id;
+    const { role } = req.body;
+
+    role = role.toLowerCase();
+    const user = await User.findById(userId);
+    if (!user) {
+      return res.status(404).json({
+        success: false,
+        message: "User not found",
+      });
+    }
+
+    if (user._id === req.user._id) {
+      return res.status(404).json({
+        success: false,
+        message: "Cannot update your own role",
+      });
+    }
+
+    if (user.role === "admin") {
+      return res.status(404).json({
+        success: false,
+        message: "Cannot update admin role",
+      });
+    }
+
+    if (!ALL_ROLES.includes(role)) {
+      return res.status(400).json({
+        success: false,
+        message: "Invalid role",
+      });
+    }
+
+    user.role = role;
+    await user.save();
+
+    await logAdminAction({
+      req,
+      targetUser: userId,
+      action: "UPDATE_USER_ROLE",
+      notes: `User role updated to ${role}`,
+    });
+
+    return res.status(200).json({
+      success: true,
+      message: `User ${user.name} role updated to ${role}`,
+    });
+  } catch (error) {
+    console.error(error);
+    return res.status(500).json({
+      success: false,
+      message: "Failed to update user role",
     });
   }
 };

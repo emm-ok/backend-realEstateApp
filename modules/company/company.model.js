@@ -47,12 +47,12 @@ const CompanySchema = new mongoose.Schema(
     },
     isActive: {
       type: Boolean,
-      default: true,
+      default: false,
       index: true,
     },
     isDeleted: {
       type: Boolean,
-      default: true,
+      default: false,
       index: true,
     },
     deletedAt: Date,

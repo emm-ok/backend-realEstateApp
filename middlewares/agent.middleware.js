@@ -2,7 +2,7 @@ import Agent from "../modules/agent/agent.model.js"
 
 export const agentOnly = async(req, res, next) => {
     try{
-        const agent = await Agent.findOne({ userId: req.user._id })
+        const agent = await Agent.findOne({ userId: req.user._id, isSuspended: false })
         .select("-password -__v");
 
         if(!agent || !agent.verified){

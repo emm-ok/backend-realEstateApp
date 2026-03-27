@@ -208,64 +208,6 @@ export const getMyListings = async (req, res) => {
   }
 };
 
-export const getAllListingsForAdmin = async (req, res) => {
-  try {
-    const {
-      type,
-      listingType,
-      city,
-      minPrice,
-      maxPrice,
-      page = 1,
-      limit = 12,
-    } = req.query;
-
-    const filter = {
-      isDeleted: false,
-    };
-
-    if (type) filter.type = type;
-    if (listingType) filter.listingType = listingType;
-    if (city) filter["location.city"] = city;
-
-    if (minPrice || maxPrice) {
-      filter.price = {};
-      if (minPrice) filter.price.$gte = Number(minPrice);
-      if (maxPrice) filter.price.$lte = Number(maxPrice);
-    }
-
-    const listings = await Listings.find(filter)
-      .populate({
-        path: "agentId",
-        populate: {
-          path: "userId",
-          select: "name email",
-        },
-      })
-      .sort({ createdAt: -1 })
-      .skip((page - 1) * limit)
-      .limit(Number(limit));
-
-    const total = await Listings.countDocuments(filter);
-
-    return res.status(200).json({
-      success: true,
-      message: "Listings fetched successfully",
-      total,
-      page: Number(page),
-      pages: Math.ceil(total / limit),
-      limit: Number(limit),
-      listings,
-    });
-  } catch (error) {
-    console.error("Error fetching listings:", error);
-    return res.status(500).json({
-      success: false,
-      message: "Failed to fetch listings",
-    });
-  }
-};
-
 export const featureListing = async (req, res) => {
   try {
     const listing = await Listings.findById(req.params.listingId);
@@ -276,7 +218,7 @@ export const featureListing = async (req, res) => {
 
     return res.status(200).json({
       success: true,
-      message: `Listing ${listing.isFeatured ? "featured" : "unfeatured"}`,
+      message: `Listing ${listing.isFeatured ? "featured" : "unfeatured"} successfully`,
     });
   } catch (error) {
     return res.status(500).json({

@@ -497,8 +497,7 @@ export const approveAgentApplication = async (req, res) => {
     // LAST step
     const agent = await Agent.create({
       userId: application.userId,
-      verified: true,
-      agentStatus: "approved",
+      isActive: true,
     });
 
     return res.status(200).json({

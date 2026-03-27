@@ -381,7 +381,7 @@ export const approveCompanyApplication = async (req, res) => {
       email: application.company.email,
       logo: application.company.logo,
       website: application.company.website,
-      verified: true,
+      isActive: true,
       isSuspended: false,
       agents: [],
       users: [],
@@ -394,7 +394,6 @@ export const approveCompanyApplication = async (req, res) => {
     });
 
     newCompany.users.push(member._id);
-    newCompany.verified = true;
     await newCompany.save();
 
     // 2️⃣ Update application status

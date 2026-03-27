@@ -1,7 +1,6 @@
 import { Router } from "express";
 import {
   getAllApprovedListings,
-  getAllListingsForAdmin,
   getListingById,
   updateListing,
   deleteListing,
@@ -17,10 +16,7 @@ import { requireSuperAdmin } from "../../middlewares/admin.middleware.js";
 
 const listingsRouter = Router();
 
-/* =========================================
-   PUBLIC ROUTES
-========================================= */
-
+// PUBLIC ROUTES
 // Get all approved & published listings (paginated + filtered)
 listingsRouter.get("/", getAllApprovedListings);
 
@@ -30,11 +26,7 @@ listingsRouter.get("/search", searchListings);
 // Get single listing by ID
 listingsRouter.get("/:listingId", getListingById);
 
-
-/* =========================================
-   AGENT ROUTES
-========================================= */
-
+//  AGENT ROUTES
 // Agent gets their own listings
 listingsRouter.get(
   "/agent/me",
@@ -60,18 +52,7 @@ listingsRouter.delete(
   deleteListing
 );
 
-
-/* =========================================
-   ADMIN ROUTES
-========================================= */
-
-listingsRouter.get(
-  "/admin/all",
-  protect,
-  requireSuperAdmin,
-  getAllListingsForAdmin
-);
-
+// ADMIN ROUTES
 // Admin feature/unfeature listing
 listingsRouter.patch(
   "/:listingId/feature",

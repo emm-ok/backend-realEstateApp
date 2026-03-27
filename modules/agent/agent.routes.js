@@ -2,7 +2,7 @@ import Router from "express"
 import { protect } from "../../middlewares/auth.middleware.js";
 import { agentOnly } from "../../middlewares/agent.middleware.js";
 import { requireSuperAdmin } from "../../middlewares/admin.middleware.js";
-import { getAgentById, getAgents, getAgentStats, getCurrentAgent, getMyListings, suspendAgent, updateAgentById } from "./agent.controller.js";
+import { getAgentById, getAllAgents, getAgentStats, getCurrentAgent, getMyListings, suspendAgent, updateAgentById } from "./agent.controller.js";
 
 const agentRouter = Router();
 
@@ -12,7 +12,7 @@ agentRouter.get("/me/stats", protect, agentOnly, getAgentStats);
 agentRouter.get("/me/listings", protect, agentOnly, getMyListings);
 
 // Admin actions
-agentRouter.get("/", protect, requireSuperAdmin, getAgents);
+agentRouter.get("/", protect, requireSuperAdmin, getAllAgents);
 agentRouter.get("/:agentId", protect, getAgentById);
 agentRouter.patch("/:agentId", protect, requireSuperAdmin, suspendAgent);
 

@@ -12,7 +12,8 @@ import {
     requestEmailVerification, 
     requestPasswordReset, 
     toggleBookmarks, 
-    updateCurrentUser, 
+    updateCurrentUser,
+    updateUserRole, 
 } from "./user.controller.js";
 import { requireSuperAdmin } from "../../middlewares/admin.middleware.js";
 import { getAllUsers, getUserById, suspendUserById, updateUserById } from "../user/user.controller.js";
@@ -42,6 +43,7 @@ userRouter.get("/", protect, requireSuperAdmin, getAllUsers);
 userRouter.get("/:id", protect, requireSuperAdmin, getUserById);
 userRouter.put("/:id", protect, requireSuperAdmin, updateUserById);
 userRouter.patch("/:id/suspend", protect, requireSuperAdmin, suspendUserById);
+userRouter.patch("/:id/role", protect, requireSuperAdmin, updateUserRole);
 
 
 export default userRouter;

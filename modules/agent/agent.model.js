@@ -13,14 +13,7 @@ const agentSchema = new mongoose.Schema(
       type: mongoose.Schema.Types.ObjectId,
       ref: "Company",
     },
-
-    agentStatus: {
-      type: String,
-      enum: ["pending", "approved", "rejected", "suspended"],
-      default: "pending",
-      index: true,
-    },
-
+    
     profile: {
       phone: String,
       bio: String,
@@ -29,10 +22,20 @@ const agentSchema = new mongoose.Schema(
       areasServed: [String],
       languages: [String],
     },
-
+    
     ratings: {
       avgRatings: { type: Number, default: 0 },
       totalReviews: { type: Number, default: 0 },
+    },
+    
+    isSuspended: {
+      type: Boolean,
+      default: false,
+    },
+
+    isActive: {
+      type: Boolean,
+      default: false,
     },
 
     verified: {

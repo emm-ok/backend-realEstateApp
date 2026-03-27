@@ -118,11 +118,14 @@ export const getAgentStats = async (req, res) => {
   }
 };
 
-export const getAgents = async (req, res) => {
+export const getAllAgents = async (req, res) => {
   try {
     const status = req.query.status;
 
-    const filter = {};
+    const filter = {
+      isActive: true,
+      isSuspended: false,
+    };
 
     if (status && !["pending", "verified"].includes(status)) {
       return res.status(400).json({
@@ -168,10 +171,9 @@ export const getAgentById = async (req, res) => {
       });
     }
 
-    const agent = await Agent.findById(agentId)
-      .select("-__v");
+    const agent = await Agent.findById(agentId).select("-__v");
 
-    if (!agent || agent.agentStatus !== "approved") {
+    if (!agent || isSuspended) {
       return res.status(404).json({
         success: false,
         message: "Agent not found",
@@ -208,7 +210,7 @@ export const suspendAgent = async (req, res) => {
       });
     }
 
-    agent.agentStatus = "suspended";
+    agent.isSuspended = true;
     agent.verified = false;
     await agent.save();
 
