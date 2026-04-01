@@ -15,7 +15,8 @@ export const getCurrentUser = async (req, res) => {
     const userId = req.user._id;
 
     // Fetch user from DB to ensure up-to-date data
-    const user = await User.findById(userId, {
+    const user = await User.findOne({
+      _id: userId,
       isActive: true,
       isSuspended: false,
     })
@@ -602,6 +603,13 @@ export const suspendUserById = async (req, res) => {
       });
     }
 
+    if(user._id.toString() === req.user._id.toString()) {
+      return res.status(400).json({
+        success: false,
+        message: "Cannot suspend yourself",
+      });
+    };
+    
     if (user.role === "admin") {
       return res.status(400).json({
         success: false,
