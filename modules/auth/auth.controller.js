@@ -24,7 +24,6 @@ export const register = async (req, res, next) => {
       error.statusCode = 409;
       throw error;
     }
-
     const user = await User.create({
       name,
       email,
@@ -61,13 +60,6 @@ export const register = async (req, res, next) => {
     return res.status(201).json({
       success: true,
       message: "User created successfully",
-      user: {
-        id: user._id,
-        name: user.name,
-        email: user.email,
-        role: user.role,
-        image: user.image,
-      },
     });
   } catch (error) {
     next(error);
@@ -148,14 +140,6 @@ export const login = async (req, res, next) => {
     return res.status(201).json({
       success: true,
       message: "User signed in successfully",
-      user: {
-        id: user._id,
-        name: user.name,
-        email: user.email,
-        role: user.role,
-        image: user.image,
-        token: accessToken,
-      },
     });
   } catch (error) {
     next(error);

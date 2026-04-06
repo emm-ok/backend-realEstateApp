@@ -49,17 +49,6 @@ app.use('/api/bookmarks', bookmarkRouter);
 
 app.use(errorMiddleware);
 
-app.get("/test-cookie", (req, res) => {
-    res.cookie("testCookie", "123", {
-        httpOnly: true,
-        secure: false,
-        sameSite: "None",
-        path: "/",
-    });
-
-    res.json({ ok: true });
-});
-
 app.get("/health", (req, res) => {
     res.status(200).json({
         status: "OK",

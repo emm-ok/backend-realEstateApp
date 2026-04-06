@@ -57,7 +57,6 @@ const userSchema = new mongoose.Schema(
       {
         type: mongoose.Schema.Types.ObjectId,
         ref: "Listings",
-        // required: true,
         index: true,
         default: null,
       },
